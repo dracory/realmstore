@@ -28,7 +28,7 @@ func (st *storeImplementation) PersonFindByEmail(email string) (PersonInterface,
 		return nil, sqlErr
 	}
 
-	var record Person
+	var record personImplementation
 	err := sqlscan.Get(context.Background(), st.db, &record, sqlStr)
 
 	if err != nil {

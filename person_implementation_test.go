@@ -8,26 +8,25 @@ import (
 func TestPersonCreate(t *testing.T) {
 	store := newTestStore(t)
 
-	person := &Person{
-		Status:    PersonStatusActive,
-		FirstName: "John",
-		LastName:  "Doe",
-	}
+	person := NewPerson()
+	person.SetStatus(PersonStatusActive)
+	person.SetFirstName("John")
+	person.SetLastName("Doe")
 
 	err := store.PersonCreate(person)
 	if err != nil {
 		t.Fatalf("failed to create person: %v", err)
 	}
 
-	if person.ID == "" {
+	if person.GetID() == "" {
 		t.Error("expected person ID to be set")
 	}
 
-	if person.CreatedAt.IsZero() {
+	if person.GetCreatedAt().IsZero() {
 		t.Error("expected CreatedAt to be set")
 	}
 
-	if person.UpdatedAt.IsZero() {
+	if person.GetUpdatedAt().IsZero() {
 		t.Error("expected UpdatedAt to be set")
 	}
 }
@@ -35,18 +34,17 @@ func TestPersonCreate(t *testing.T) {
 func TestPersonFindByID(t *testing.T) {
 	store := newTestStore(t)
 
-	person := &Person{
-		Status:    PersonStatusActive,
-		FirstName: "Jane",
-		LastName:  "Smith",
-	}
+	person := NewPerson()
+	person.SetStatus(PersonStatusActive)
+	person.SetFirstName("Jane")
+	person.SetLastName("Smith")
 
 	err := store.PersonCreate(person)
 	if err != nil {
 		t.Fatalf("failed to create person: %v", err)
 	}
 
-	found, err := store.PersonFindByID(person.ID)
+	found, err := store.PersonFindByID(person.GetID())
 	if err != nil {
 		t.Fatalf("failed to find person: %v", err)
 	}
@@ -80,31 +78,30 @@ func TestPersonFindByIDNotFound(t *testing.T) {
 func TestPersonUpdate(t *testing.T) {
 	store := newTestStore(t)
 
-	person := &Person{
-		Status:    PersonStatusActive,
-		FirstName: "Bob",
-		LastName:  "Wilson",
-	}
+	person := NewPerson()
+	person.SetStatus(PersonStatusActive)
+	person.SetFirstName("Bob")
+	person.SetLastName("Wilson")
 
 	err := store.PersonCreate(person)
 	if err != nil {
 		t.Fatalf("failed to create person: %v", err)
 	}
 
-	originalUpdatedAt := person.UpdatedAt
+	originalUpdatedAt := person.GetUpdatedAt()
 	time.Sleep(10 * time.Millisecond)
 
-	person.FirstName = "Robert"
+	person.SetFirstName("Robert")
 	err = store.PersonUpdate(person)
 	if err != nil {
 		t.Fatalf("failed to update person: %v", err)
 	}
 
-	if !person.UpdatedAt.After(originalUpdatedAt) {
+	if !person.GetUpdatedAt().After(originalUpdatedAt) {
 		t.Error("expected UpdatedAt to be changed")
 	}
 
-	found, err := store.PersonFindByID(person.ID)
+	found, err := store.PersonFindByID(person.GetID())
 	if err != nil {
 		t.Fatalf("failed to find person: %v", err)
 	}
@@ -117,23 +114,22 @@ func TestPersonUpdate(t *testing.T) {
 func TestPersonDelete(t *testing.T) {
 	store := newTestStore(t)
 
-	person := &Person{
-		Status:    PersonStatusActive,
-		FirstName: "ToDelete",
-		LastName:  "User",
-	}
+	person := NewPerson()
+	person.SetStatus(PersonStatusActive)
+	person.SetFirstName("ToDelete")
+	person.SetLastName("User")
 
 	err := store.PersonCreate(person)
 	if err != nil {
 		t.Fatalf("failed to create person: %v", err)
 	}
 
-	err = store.PersonDelete(person.ID)
+	err = store.PersonDelete(person.GetID())
 	if err != nil {
 		t.Fatalf("failed to delete person: %v", err)
 	}
 
-	found, err := store.PersonFindByID(person.ID)
+	found, err := store.PersonFindByID(person.GetID())
 	if err != nil {
 		t.Fatalf("failed to find person: %v", err)
 	}

@@ -7,11 +7,10 @@ import (
 func TestEmailCreate(t *testing.T) {
 	store := newTestStore(t)
 
-	person := &Person{
-		Status:    PersonStatusActive,
-		FirstName: "Email",
-		LastName:  "Owner",
-	}
+	person := NewPerson()
+	person.SetStatus(PersonStatusActive)
+	person.SetFirstName("Email")
+	person.SetLastName("Owner")
 
 	err := store.PersonCreate(person)
 	if err != nil {
@@ -19,7 +18,7 @@ func TestEmailCreate(t *testing.T) {
 	}
 
 	email := &Email{
-		OwnerID:      person.ID,
+		OwnerID:      person.GetID(),
 		Status:       EmailStatusActive,
 		EmailAddress: "test@example.com",
 		IsDefault:    Yes,
@@ -42,11 +41,10 @@ func TestEmailCreate(t *testing.T) {
 func TestEmailFindByID(t *testing.T) {
 	store := newTestStore(t)
 
-	person := &Person{
-		Status:    PersonStatusActive,
-		FirstName: "Email",
-		LastName:  "Finder",
-	}
+	person := NewPerson()
+	person.SetStatus(PersonStatusActive)
+	person.SetFirstName("Email")
+	person.SetLastName("Finder")
 
 	err := store.PersonCreate(person)
 	if err != nil {
@@ -54,7 +52,7 @@ func TestEmailFindByID(t *testing.T) {
 	}
 
 	email := &Email{
-		OwnerID:      person.ID,
+		OwnerID:      person.GetID(),
 		Status:       EmailStatusActive,
 		EmailAddress: "findme@example.com",
 		IsDefault:    Yes,
@@ -82,11 +80,10 @@ func TestEmailFindByID(t *testing.T) {
 func TestEmailFindByEmailAddress(t *testing.T) {
 	store := newTestStore(t)
 
-	person := &Person{
-		Status:    PersonStatusActive,
-		FirstName: "Email",
-		LastName:  "Address",
-	}
+	person := NewPerson()
+	person.SetStatus(PersonStatusActive)
+	person.SetFirstName("Email")
+	person.SetLastName("Address")
 
 	err := store.PersonCreate(person)
 	if err != nil {
@@ -94,7 +91,7 @@ func TestEmailFindByEmailAddress(t *testing.T) {
 	}
 
 	email := &Email{
-		OwnerID:      person.ID,
+		OwnerID:      person.GetID(),
 		Status:       EmailStatusActive,
 		EmailAddress: "unique@example.com",
 		IsDefault:    Yes,
@@ -110,8 +107,8 @@ func TestEmailFindByEmailAddress(t *testing.T) {
 		t.Fatal("expected to find email by address")
 	}
 
-	if found.OwnerID != person.ID {
-		t.Errorf("expected OwnerID to be '%s', got '%s'", person.ID, found.OwnerID)
+	if found.OwnerID != person.GetID() {
+		t.Errorf("expected OwnerID to be '%s', got '%s'", person.GetID(), found.OwnerID)
 	}
 }
 
@@ -127,11 +124,10 @@ func TestEmailFindByEmailAddressNotFound(t *testing.T) {
 func TestEmailUpdate(t *testing.T) {
 	store := newTestStore(t)
 
-	person := &Person{
-		Status:    PersonStatusActive,
-		FirstName: "Email",
-		LastName:  "Updater",
-	}
+	person := NewPerson()
+	person.SetStatus(PersonStatusActive)
+	person.SetFirstName("Email")
+	person.SetLastName("Updater")
 
 	err := store.PersonCreate(person)
 	if err != nil {
@@ -139,7 +135,7 @@ func TestEmailUpdate(t *testing.T) {
 	}
 
 	email := &Email{
-		OwnerID:      person.ID,
+		OwnerID:      person.GetID(),
 		Status:       EmailStatusActive,
 		EmailAddress: "old@example.com",
 		IsDefault:    Yes,
@@ -169,11 +165,10 @@ func TestEmailUpdate(t *testing.T) {
 func TestEmailDeleteByID(t *testing.T) {
 	store := newTestStore(t)
 
-	person := &Person{
-		Status:    PersonStatusActive,
-		FirstName: "Email",
-		LastName:  "Deleter",
-	}
+	person := NewPerson()
+	person.SetStatus(PersonStatusActive)
+	person.SetFirstName("Email")
+	person.SetLastName("Deleter")
 
 	err := store.PersonCreate(person)
 	if err != nil {
@@ -181,7 +176,7 @@ func TestEmailDeleteByID(t *testing.T) {
 	}
 
 	email := &Email{
-		OwnerID:      person.ID,
+		OwnerID:      person.GetID(),
 		Status:       EmailStatusActive,
 		EmailAddress: "delete@example.com",
 		IsDefault:    Yes,
@@ -214,11 +209,10 @@ func TestEmailDeleteByID(t *testing.T) {
 func TestEmailList(t *testing.T) {
 	store := newTestStore(t)
 
-	person := &Person{
-		Status:    PersonStatusActive,
-		FirstName: "Email",
-		LastName:  "Lister",
-	}
+	person := NewPerson()
+	person.SetStatus(PersonStatusActive)
+	person.SetFirstName("Email")
+	person.SetLastName("Lister")
 
 	err := store.PersonCreate(person)
 	if err != nil {
@@ -226,9 +220,9 @@ func TestEmailList(t *testing.T) {
 	}
 
 	emails := []*Email{
-		{OwnerID: person.ID, Status: EmailStatusActive, EmailAddress: "email1@example.com", IsDefault: Yes},
-		{OwnerID: person.ID, Status: EmailStatusActive, EmailAddress: "email2@example.com", IsDefault: No},
-		{OwnerID: person.ID, Status: EmailStatusActive, EmailAddress: "email3@example.com", IsDefault: No},
+		{OwnerID: person.GetID(), Status: EmailStatusActive, EmailAddress: "email1@example.com", IsDefault: Yes},
+		{OwnerID: person.GetID(), Status: EmailStatusActive, EmailAddress: "email2@example.com", IsDefault: No},
+		{OwnerID: person.GetID(), Status: EmailStatusActive, EmailAddress: "email3@example.com", IsDefault: No},
 	}
 
 	for _, e := range emails {
@@ -239,7 +233,7 @@ func TestEmailList(t *testing.T) {
 	}
 
 	list, err := store.EmailList(&EmailQueryOptions{
-		OwnerID: person.ID,
+		OwnerID: person.GetID(),
 	})
 	if err != nil {
 		t.Fatalf("failed to list emails: %v", err)

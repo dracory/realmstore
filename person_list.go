@@ -9,7 +9,7 @@ import (
 )
 
 type PersonWithEmail struct {
-	Person
+	personImplementation
 	EmailAddress *string `json:"email_address" db:"email_address"`
 }
 

@@ -16,7 +16,7 @@ func (st *storeImplementation) PersonCreate(person PersonInterface) error {
 	person.SetCreatedAt(time.Now())
 	person.SetUpdatedAt(time.Now())
 
-	p := person.(*Person)
+	p := person.(*personImplementation)
 	sqlStr, _, _ := goqu.Dialect(st.dbDriverName).Insert(st.personTableName).Rows(p).ToSQL()
 
 	return st.DbExec(sqlStr)

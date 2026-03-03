@@ -11,7 +11,7 @@ import (
 func (st *storeImplementation) PersonUpdate(person PersonInterface) error {
 	person.SetUpdatedAt(time.Now())
 
-	p := person.(*Person)
+	p := person.(*personImplementation)
 	var sqlStr string
 	sqlStr, _, err := goqu.Dialect(st.dbDriverName).
 		Update(st.personTableName).

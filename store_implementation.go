@@ -76,11 +76,10 @@ func (st *storeImplementation) PersonFindOrCreate(firstName, lastName, email str
 		return person, nil
 	}
 
-	person = &Person{
-		Status:    PersonStatusActive,
-		FirstName: firstName,
-		LastName:  lastName,
-	}
+	person = NewPerson()
+	person.SetStatus(PersonStatusActive)
+	person.SetFirstName(firstName)
+	person.SetLastName(lastName)
 
 	err = st.PersonCreate(person)
 	if err != nil {
