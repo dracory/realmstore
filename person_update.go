@@ -8,14 +8,15 @@ import (
 )
 
 // PersonUpdate creates a person
-func (st *storeImplementation) PersonUpdate(person *Person) error {
-	person.UpdatedAt = time.Now()
+func (st *storeImplementation) PersonUpdate(person PersonInterface) error {
+	person.SetUpdatedAt(time.Now())
 
+	p := person.(*Person)
 	var sqlStr string
 	sqlStr, _, err := goqu.Dialect(st.dbDriverName).
 		Update(st.personTableName).
-		Set(person).
-		Where(goqu.C("id").Eq(person.ID)).
+		Set(p).
+		Where(goqu.C("id").Eq(p.ID)).
 		ToSQL()
 
 	if st.debug && err != nil {

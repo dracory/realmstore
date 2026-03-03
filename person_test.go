@@ -55,12 +55,12 @@ func TestPersonFindByID(t *testing.T) {
 		t.Fatal("expected to find person")
 	}
 
-	if found.FirstName != "Jane" {
-		t.Errorf("expected FirstName to be 'Jane', got '%s'", found.FirstName)
+	if found.GetFirstName() != "Jane" {
+		t.Errorf("expected FirstName to be 'Jane', got '%s'", found.GetFirstName())
 	}
 
-	if found.LastName != "Smith" {
-		t.Errorf("expected LastName to be 'Smith', got '%s'", found.LastName)
+	if found.GetLastName() != "Smith" {
+		t.Errorf("expected LastName to be 'Smith', got '%s'", found.GetLastName())
 	}
 }
 
@@ -109,8 +109,8 @@ func TestPersonUpdate(t *testing.T) {
 		t.Fatalf("failed to find person: %v", err)
 	}
 
-	if found.FirstName != "Robert" {
-		t.Errorf("expected FirstName to be 'Robert', got '%s'", found.FirstName)
+	if found.GetFirstName() != "Robert" {
+		t.Errorf("expected FirstName to be 'Robert', got '%s'", found.GetFirstName())
 	}
 }
 
@@ -151,16 +151,16 @@ func TestPersonFindOrCreate(t *testing.T) {
 		t.Fatalf("failed to find or create person: %v", err)
 	}
 
-	if person.ID == "" {
+	if person.GetID() == "" {
 		t.Error("expected person ID to be set")
 	}
 
-	if person.FirstName != "John" {
-		t.Errorf("expected FirstName to be 'John', got '%s'", person.FirstName)
+	if person.GetFirstName() != "John" {
+		t.Errorf("expected FirstName to be 'John', got '%s'", person.GetFirstName())
 	}
 
-	if person.LastName != "Doe" {
-		t.Errorf("expected LastName to be 'Doe', got '%s'", person.LastName)
+	if person.GetLastName() != "Doe" {
+		t.Errorf("expected LastName to be 'Doe', got '%s'", person.GetLastName())
 	}
 
 	person2, err := store.PersonFindOrCreate("John", "Doe", "john@example.com")
@@ -168,7 +168,7 @@ func TestPersonFindOrCreate(t *testing.T) {
 		t.Fatalf("failed to find or create person: %v", err)
 	}
 
-	if person2.ID != person.ID {
+	if person2.GetID() != person.GetID() {
 		t.Error("expected same person to be returned for existing email")
 	}
 }

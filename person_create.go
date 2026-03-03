@@ -8,15 +8,16 @@ import (
 )
 
 // PersonCreate creates a person
-func (st *storeImplementation) PersonCreate(person *Person) error {
-	if person.ID == "" {
+func (st *storeImplementation) PersonCreate(person PersonInterface) error {
+	if person.GetID() == "" {
 		time.Sleep(1 * time.Millisecond) // !!! important
-		person.ID = uid.MicroUid()
+		person.SetID(uid.MicroUid())
 	}
-	person.CreatedAt = time.Now()
-	person.UpdatedAt = time.Now()
+	person.SetCreatedAt(time.Now())
+	person.SetUpdatedAt(time.Now())
 
-	sqlStr, _, _ := goqu.Dialect(st.dbDriverName).Insert(st.personTableName).Rows(person).ToSQL()
+	p := person.(*Person)
+	sqlStr, _, _ := goqu.Dialect(st.dbDriverName).Insert(st.personTableName).Rows(p).ToSQL()
 
 	return st.DbExec(sqlStr)
 }

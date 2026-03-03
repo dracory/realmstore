@@ -10,13 +10,13 @@ type StoreInterface interface {
 	DbExec(sqlStr string) error
 	EnableDebug(debug bool)
 
-	PersonFindOrCreate(firstName, lastName, email string) (*Person, error)
-	PersonCreate(person *Person) error
-	PersonCreateWithEmail(fields map[string]string) (*Person, error)
-	PersonUpdate(person *Person) error
+	PersonFindOrCreate(firstName, lastName, email string) (PersonInterface, error)
+	PersonCreate(person PersonInterface) error
+	PersonCreateWithEmail(fields map[string]string) (PersonInterface, error)
+	PersonUpdate(person PersonInterface) error
 	PersonUpdateByID(personID string, fields map[string]interface{}) error
-	PersonFindByID(personID string) (*Person, error)
-	PersonFindByEmail(email string) (*Person, error)
+	PersonFindByID(personID string) (PersonInterface, error)
+	PersonFindByEmail(email string) (PersonInterface, error)
 	PersonFindDefaultEmail(person_id string) (*Email, error)
 	PersonDelete(personId string) error
 	PersonList(options *PersonQueryOptions) ([]PersonWithEmail, error)

@@ -8,15 +8,15 @@ import (
 )
 
 // PersonCreateWithEmail creates a person with email.
-func (st *storeImplementation) PersonCreateWithEmail(fields map[string]string) (*Person, error) {
+func (st *storeImplementation) PersonCreateWithEmail(fields map[string]string) (PersonInterface, error) {
 	person := Person{}
 	if _, exists := fields["id"]; !exists {
 		time.Sleep(1 * time.Millisecond) // !!! important
 		person.ID = uid.MicroUid()
 	}
 
-	person.FirstName = fields["firstName"]
-	person.LastName = fields["lastName"]
+	person.SetFirstName(fields["firstName"])
+	person.SetLastName(fields["lastName"])
 
 	person.CreatedAt = time.Now()
 	person.UpdatedAt = time.Now()

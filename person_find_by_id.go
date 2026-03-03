@@ -10,7 +10,7 @@ import (
 )
 
 // PersonFindByID finds a person by ID
-func (st *storeImplementation) PersonFindByID(personID string) (*Person, error) {
+func (st *storeImplementation) PersonFindByID(personID string) (PersonInterface, error) {
 	q := goqu.Dialect(st.dbDriverName).From(st.personTableName)
 	q = q.Where(goqu.C("id").Eq(personID))
 	sqlStr, _, sqlErr := q.Where(goqu.C("deleted_at").IsNull()).Select().Limit(1).ToSQL()

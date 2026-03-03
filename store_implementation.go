@@ -66,7 +66,7 @@ func (st *storeImplementation) EnableDebug(debug bool) {
 	st.debug = debug
 }
 
-func (st *storeImplementation) PersonFindOrCreate(firstName, lastName, email string) (*Person, error) {
+func (st *storeImplementation) PersonFindOrCreate(firstName, lastName, email string) (PersonInterface, error) {
 	person, err := st.PersonFindByEmail(email)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func (st *storeImplementation) PersonFindOrCreate(firstName, lastName, email str
 		ID:           uid.MicroUid(),
 		IsDefault:    Yes,
 		Status:       EmailStatusActive,
-		OwnerID:      person.ID,
+		OwnerID:      person.GetID(),
 		EmailAddress: email,
 	})
 	if err != nil {
