@@ -7,7 +7,7 @@ import (
 )
 
 // PersonMaxPages return max page not need CountOnly But need Limit
-func (st *Store) PersonMaxPages(options *PersonQueryOptions) (uint, error) {
+func (st *storeImplementation) PersonMaxPages(options *PersonQueryOptions) (uint, error) {
 	q := st.personQuery(options).Select(goqu.COUNT("*"))
 
 	sqlStr, _, errStr := q.ToSQL()

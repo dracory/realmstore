@@ -8,7 +8,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 )
 
-func (st *Store) EmailDeleteByID(emailId string) (bool, error) {
+func (st *storeImplementation) EmailDeleteByID(emailId string) (bool, error) {
 	sqlStr, _, err := goqu.Dialect(st.dbDriverName).
 		Update(st.emailTableName).
 		Where(goqu.C("id").Eq(emailId), goqu.C("deleted_at").IsNull()).

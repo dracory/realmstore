@@ -6,7 +6,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 )
 
-func (st *Store) personQuery(options *PersonQueryOptions) *goqu.SelectDataset {
+func (st *storeImplementation) personQuery(options *PersonQueryOptions) *goqu.SelectDataset {
 	q := goqu.Dialect(st.dbDriverName).From(st.personTableName)
 
 	if options.WithEmail {
@@ -16,9 +16,9 @@ func (st *Store) personQuery(options *PersonQueryOptions) *goqu.SelectDataset {
 	if value := options.Search; value != "" {
 		q = q.Where(
 			goqu.Or(
-				goqu.C("first_name").ILike(fmt.Sprintf("%%%v%%",options.Search)),
-				goqu.C("last_name").ILike(fmt.Sprintf("%%%v%%",options.Search)),
-				goqu.C("email_address").ILike(fmt.Sprintf("%%%v%%",options.Search)),
+				goqu.C("first_name").ILike(fmt.Sprintf("%%%v%%", options.Search)),
+				goqu.C("last_name").ILike(fmt.Sprintf("%%%v%%", options.Search)),
+				goqu.C("email_address").ILike(fmt.Sprintf("%%%v%%", options.Search)),
 			))
 	}
 

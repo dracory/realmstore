@@ -47,7 +47,7 @@ type Email struct {
 }
 
 // SqlCreateEmailTable returns a SQL string for creating the user table
-func (st *Store) SqlCreateEmailTable() string {
+func (st *storeImplementation) SqlCreateEmailTable() string {
 	sqlMysql := `
 	CREATE TABLE IF NOT EXISTS ` + st.emailTableName + ` (
 	  id varchar(40) NOT NULL PRIMARY KEY,
@@ -103,7 +103,7 @@ func (st *Store) SqlCreateEmailTable() string {
 }
 
 // EmailFoundByPersonId find email by person id return one row Email struct
-func (st *Store) EmailFoundByPersonId(personId string) (*Email, error) {
+func (st *storeImplementation) EmailFoundByPersonId(personId string) (*Email, error) {
 	sqlStr, _, sqlErr := goqu.Dialect(st.dbDriverName).From(st.emailTableName).Where(goqu.C("owner_id").Eq(personId), goqu.C("deleted_at").IsNull()).Limit(1).ToSQL()
 
 	if sqlErr != nil {

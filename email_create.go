@@ -9,7 +9,7 @@ import (
 )
 
 // EmailCreate creates an email
-func (st *Store) EmailCreate(email *Email) (bool, error) {
+func (st *storeImplementation) EmailCreate(email *Email) (bool, error) {
 	if email.ID == "" {
 		time.Sleep(1 * time.Millisecond)
 		email.ID = uid.MicroUid()

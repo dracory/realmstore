@@ -8,7 +8,7 @@ import (
 )
 
 // PersonUpdateByID creates a person
-func (st *Store) PersonUpdateByID(personID string, fields map[string]interface{}) error {
+func (st *storeImplementation) PersonUpdateByID(personID string, fields map[string]interface{}) error {
 	fields["updated_at"] = time.Now()
 
 	sqlStr, _, err := goqu.Dialect(st.dbDriverName).Update(st.personTableName).Set(fields).Where(goqu.C("id").Eq(personID)).ToSQL()

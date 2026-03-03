@@ -28,7 +28,7 @@ type Person struct {
 }
 
 // SqlCreatePersonTable returns a SQL string for creating the setting table
-func (st *Store) SqlCreatePersonTable() string {
+func (st *storeImplementation) SqlCreatePersonTable() string {
 	sqlMysql := `
 	CREATE TABLE IF NOT EXISTS ` + st.personTableName + ` (
 	  id varchar(40) NOT NULL PRIMARY KEY,

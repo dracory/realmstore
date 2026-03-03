@@ -13,7 +13,7 @@ type PersonWithEmail struct {
 	EmailAddress *string `json:"email_address" db:"email_address"`
 }
 
-func (st *Store) PersonList(options *PersonQueryOptions) ([]PersonWithEmail, error) {
+func (st *storeImplementation) PersonList(options *PersonQueryOptions) ([]PersonWithEmail, error) {
 	var sqlStr string
 
 	q := st.personQuery(options)
@@ -40,7 +40,6 @@ func (st *Store) PersonList(options *PersonQueryOptions) ([]PersonWithEmail, err
 
 	return persons, nil
 }
-
 
 //Old Version
 // PersonList creates a person

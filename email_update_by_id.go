@@ -7,7 +7,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 )
 
-func (st *Store) EmailUpdateByID(emailId string, filds map[string]interface{}) bool {
+func (st *storeImplementation) EmailUpdateByID(emailId string, filds map[string]interface{}) bool {
 	filds["updated_at"] = time.Now()
 
 	sqlStr, _, err := goqu.Dialect(st.dbDriverName).Update(st.emailTableName).Set(filds).Where(goqu.C("id").Eq(emailId)).ToSQL()

@@ -8,7 +8,7 @@ import (
 )
 
 // PersonCreateWithEmail creates a person with email.
-func (st *Store) PersonCreateWithEmail(fields map[string]string) (*Person, error) {
+func (st *storeImplementation) PersonCreateWithEmail(fields map[string]string) (*Person, error) {
 	person := Person{}
 	if _, exists := fields["id"]; !exists {
 		time.Sleep(1 * time.Millisecond) // !!! important

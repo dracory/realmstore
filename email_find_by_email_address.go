@@ -9,7 +9,7 @@ import (
 )
 
 // EmailFindByEmailAddress finds a emaii by email address
-func (st *Store) EmailFindByEmailAddress(emailAddress string) *Email {
+func (st *storeImplementation) EmailFindByEmailAddress(emailAddress string) *Email {
 	sqlStr, _, _ := goqu.Dialect(st.dbDriverName).
 		From(st.emailTableName).
 		Where(goqu.C("email_address").Eq(emailAddress), goqu.C("deleted_at").IsNull()).

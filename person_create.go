@@ -8,7 +8,7 @@ import (
 )
 
 // PersonCreate creates a person
-func (st *Store) PersonCreate(person *Person) error {
+func (st *storeImplementation) PersonCreate(person *Person) error {
 	if person.ID == "" {
 		time.Sleep(1 * time.Millisecond) // !!! important
 		person.ID = uid.MicroUid()

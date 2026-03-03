@@ -8,7 +8,7 @@ import (
 )
 
 // PersonUpdate creates a person
-func (st *Store) PersonUpdate(person *Person) error {
+func (st *storeImplementation) PersonUpdate(person *Person) error {
 	person.UpdatedAt = time.Now()
 
 	var sqlStr string

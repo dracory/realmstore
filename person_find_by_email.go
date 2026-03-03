@@ -9,7 +9,7 @@ import (
 )
 
 // PersonFindByEmail finds a person by email
-func (st *Store) PersonFindByEmail(email string) (*Person, error) {
+func (st *storeImplementation) PersonFindByEmail(email string) (*Person, error) {
 	recordEmail := st.EmailFindByEmailAddress(email)
 
 	if recordEmail == nil {
@@ -42,4 +42,3 @@ func (st *Store) PersonFindByEmail(email string) (*Person, error) {
 
 	return &record, nil
 }
-

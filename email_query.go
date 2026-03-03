@@ -6,7 +6,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 )
 
-func (st *Store) emailQuery(options *EmailQueryOptions) *goqu.SelectDataset {
+func (st *storeImplementation) emailQuery(options *EmailQueryOptions) *goqu.SelectDataset {
 	q := goqu.Dialect(st.dbDriverName).From(st.emailTableName)
 
 	if value := options.Search; value != "" {

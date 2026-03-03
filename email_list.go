@@ -8,7 +8,7 @@ import (
 	"github.com/georgysavva/scany/sqlscan"
 )
 
-func (st *Store) EmailList(options *EmailQueryOptions) ([]Email, error) {
+func (st *storeImplementation) EmailList(options *EmailQueryOptions) ([]Email, error) {
 	var sqlStr string
 
 	q := st.emailQuery(options)
