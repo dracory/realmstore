@@ -10,13 +10,11 @@ import (
 )
 
 // EmailFindByID finds a email by ID
-func (st *storeImplementation) EmailFindByID(id string) (*Email, error) {
-	email := &Email{}
-	sqlStr, _, _ := goqu.Dialect(st.dbDriverName).Select(&Email{}).From(st.emailTableName).Where(goqu.C("id").Eq(id), goqu.C("deleted_at").IsNull()).ToSQL()
+func (st *storeImplementation) EmailFindByID(id string) (EmailInterface, error) {
+	email := &emailImplementation{}
+	sqlStr, _, _ := goqu.Dialect(st.dbDriverName).Select(&emailImplementation{}).From(st.emailTableName).Where(goqu.C("id").Eq(id), goqu.C("deleted_at").IsNull()).ToSQL()
 
-	// if st.debug {
 	log.Println(sqlStr)
-	// }
 
 	var createdAt string
 	var updatedAt string
@@ -25,7 +23,6 @@ func (st *storeImplementation) EmailFindByID(id string) (*Email, error) {
 	err := st.db.QueryRow(sqlStr).Scan(&createdAt, &deletedAt, &email.EmailAddress, &email.ID, &email.IsDefault, &email.OwnerID, &email.Status, &updatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			// sqlscan does not use this anymore
 			return nil, nil
 		}
 

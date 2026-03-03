@@ -8,10 +8,11 @@ import (
 )
 
 // EmailUpdate update exist email
-func (st *storeImplementation) EmailUpdate(email *Email) bool {
-	email.UpdatedAt = time.Now()
+func (st *storeImplementation) EmailUpdate(email EmailInterface) bool {
+	email.SetUpdatedAt(time.Now())
 
-	sqlStr, _, err := goqu.Dialect(st.dbDriverName).Update(st.emailTableName).Set(email).Where(goqu.C("id").Eq(email.ID)).ToSQL()
+	e := email.(*emailImplementation)
+	sqlStr, _, err := goqu.Dialect(st.dbDriverName).Update(st.emailTableName).Set(e).Where(goqu.C("id").Eq(e.ID)).ToSQL()
 	if err != nil {
 		log.Println(err.Error())
 		return false

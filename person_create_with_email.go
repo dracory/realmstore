@@ -33,7 +33,11 @@ func (st *storeImplementation) PersonCreateWithEmail(fields map[string]string) (
 	}
 
 	if emailAddress, exists := fields["email"]; exists {
-		isOk, errEmail := st.EmailCreate(&Email{EmailAddress: emailAddress, Status: "active", OwnerID: person.GetID()})
+		email := NewEmail()
+		email.SetEmailAddress(emailAddress)
+		email.SetStatus("active")
+		email.SetOwnerID(person.GetID())
+		isOk, errEmail := st.EmailCreate(email)
 		if errEmail != nil {
 			return nil, errEmail
 		}

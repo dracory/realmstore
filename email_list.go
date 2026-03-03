@@ -8,7 +8,7 @@ import (
 	"github.com/georgysavva/scany/sqlscan"
 )
 
-func (st *storeImplementation) EmailList(options *EmailQueryOptions) ([]Email, error) {
+func (st *storeImplementation) EmailList(options *EmailQueryOptions) ([]EmailInterface, error) {
 	var sqlStr string
 
 	q := st.emailQuery(options)
@@ -21,7 +21,7 @@ func (st *storeImplementation) EmailList(options *EmailQueryOptions) ([]Email, e
 		log.Println(sqlStr)
 	}
 
-	emails := make([]Email, 0)
+	emails := make([]emailImplementation, 0)
 	err := sqlscan.Select(context.Background(), st.db, &emails, sqlStr)
 
 	if err != nil {
@@ -35,5 +35,10 @@ func (st *storeImplementation) EmailList(options *EmailQueryOptions) ([]Email, e
 		return nil, err
 	}
 
-	return emails, nil
+	result := make([]EmailInterface, len(emails))
+	for i := range emails {
+		result[i] = &emails[i]
+	}
+
+	return result, nil
 }

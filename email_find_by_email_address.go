@@ -9,7 +9,7 @@ import (
 )
 
 // EmailFindByEmailAddress finds a emaii by email address
-func (st *storeImplementation) EmailFindByEmailAddress(emailAddress string) *Email {
+func (st *storeImplementation) EmailFindByEmailAddress(emailAddress string) EmailInterface {
 	sqlStr, _, _ := goqu.Dialect(st.dbDriverName).
 		From(st.emailTableName).
 		Where(goqu.C("email_address").Eq(emailAddress), goqu.C("deleted_at").IsNull()).
@@ -21,7 +21,7 @@ func (st *storeImplementation) EmailFindByEmailAddress(emailAddress string) *Ema
 		log.Println(sqlStr)
 	}
 
-	var email Email
+	var email emailImplementation
 	err := sqlscan.Get(context.Background(), st.db, &email, sqlStr)
 	if err != nil {
 		if sqlscan.NotFound(err) {

@@ -86,13 +86,13 @@ func (st *storeImplementation) PersonFindOrCreate(firstName, lastName, email str
 		return nil, err
 	}
 
-	isEmailCreated, err := st.EmailCreate(&Email{
-		ID:           uid.MicroUid(),
-		IsDefault:    Yes,
-		Status:       EmailStatusActive,
-		OwnerID:      person.GetID(),
-		EmailAddress: email,
-	})
+	newEmail := NewEmail()
+	newEmail.SetID(uid.MicroUid())
+	newEmail.SetIsDefault(Yes)
+	newEmail.SetStatus(EmailStatusActive)
+	newEmail.SetOwnerID(person.GetID())
+	newEmail.SetEmailAddress(email)
+	isEmailCreated, err := st.EmailCreate(newEmail)
 	if err != nil {
 		return nil, err
 	}

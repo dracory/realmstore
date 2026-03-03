@@ -17,18 +17,18 @@ type StoreInterface interface {
 	PersonUpdateByID(personID string, fields map[string]interface{}) error
 	PersonFindByID(personID string) (PersonInterface, error)
 	PersonFindByEmail(email string) (PersonInterface, error)
-	PersonFindDefaultEmail(person_id string) (*Email, error)
+	PersonFindDefaultEmail(person_id string) (EmailInterface, error)
 	PersonDelete(personId string) error
 	PersonList(options *PersonQueryOptions) ([]PersonWithEmail, error)
 	PersonMaxPages(options *PersonQueryOptions) (uint, error)
 
-	EmailCreate(email *Email) (bool, error)
-	EmailUpdate(email *Email) bool
-	EmailUpdateByID(emailId string, fields map[string]interface{}) bool
-	EmailFindByID(id string) (*Email, error)
-	EmailFindByEmailAddress(emailAddress string) *Email
-	EmailFind(options *EmailQueryOptions) (*Email, error)
+	EmailCreate(email EmailInterface) (bool, error)
 	EmailDeleteByID(emailId string) (bool, error)
-	EmailList(options *EmailQueryOptions) ([]Email, error)
-	EmailFoundByPersonId(personId string) (*Email, error)
+	EmailFind(options *EmailQueryOptions) (EmailInterface, error)
+	EmailFindByID(id string) (EmailInterface, error)
+	EmailFindByEmailAddress(emailAddress string) EmailInterface
+	EmailFoundByPersonId(personId string) (EmailInterface, error)
+	EmailList(options *EmailQueryOptions) ([]EmailInterface, error)
+	EmailUpdate(email EmailInterface) bool
+	EmailUpdateByID(emailId string, fields map[string]interface{}) bool
 }

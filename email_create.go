@@ -9,17 +9,18 @@ import (
 )
 
 // EmailCreate creates an email
-func (st *storeImplementation) EmailCreate(email *Email) (bool, error) {
-	if email.ID == "" {
+func (st *storeImplementation) EmailCreate(email EmailInterface) (bool, error) {
+	if email.GetID() == "" {
 		time.Sleep(1 * time.Millisecond)
-		email.ID = uid.MicroUid()
+		email.SetID(uid.MicroUid())
 	}
 
-	email.CreatedAt = time.Now()
-	email.UpdatedAt = time.Now()
+	email.SetCreatedAt(time.Now())
+	email.SetUpdatedAt(time.Now())
 
+	e := email.(*emailImplementation)
 	var sqlStr string
-	sqlStr, _, _ = goqu.Dialect(st.dbDriverName).Insert(st.emailTableName).Rows(email).ToSQL()
+	sqlStr, _, _ = goqu.Dialect(st.dbDriverName).Insert(st.emailTableName).Rows(e).ToSQL()
 
 	if st.debug {
 		log.Println(sqlStr)

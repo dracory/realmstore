@@ -17,7 +17,7 @@ func (st *storeImplementation) PersonFindByEmail(email string) (PersonInterface,
 	}
 
 	q := goqu.Dialect(st.dbDriverName).From(st.personTableName)
-	q = q.Where(goqu.C("id").Eq(recordEmail.OwnerID))
+	q = q.Where(goqu.C("id").Eq(recordEmail.GetOwnerID()))
 	sqlStr, _, sqlErr := q.Where(goqu.C("deleted_at").IsNull()).Select().Limit(1).ToSQL()
 
 	if st.debug {

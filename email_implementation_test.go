@@ -17,12 +17,11 @@ func TestEmailCreate(t *testing.T) {
 		t.Fatalf("failed to create person: %v", err)
 	}
 
-	email := &Email{
-		OwnerID:      person.GetID(),
-		Status:       EmailStatusActive,
-		EmailAddress: "test@example.com",
-		IsDefault:    Yes,
-	}
+	email := NewEmail()
+	email.SetOwnerID(person.GetID())
+	email.SetStatus(EmailStatusActive)
+	email.SetEmailAddress("test@example.com")
+	email.SetIsDefault(Yes)
 
 	created, err := store.EmailCreate(email)
 	if err != nil {
@@ -33,7 +32,7 @@ func TestEmailCreate(t *testing.T) {
 		t.Error("expected email to be created")
 	}
 
-	if email.ID == "" {
+	if email.GetID() == "" {
 		t.Error("expected email ID to be set")
 	}
 }
@@ -51,19 +50,18 @@ func TestEmailFindByID(t *testing.T) {
 		t.Fatalf("failed to create person: %v", err)
 	}
 
-	email := &Email{
-		OwnerID:      person.GetID(),
-		Status:       EmailStatusActive,
-		EmailAddress: "findme@example.com",
-		IsDefault:    Yes,
-	}
+	email := NewEmail()
+	email.SetOwnerID(person.GetID())
+	email.SetStatus(EmailStatusActive)
+	email.SetEmailAddress("findme@example.com")
+	email.SetIsDefault(Yes)
 
 	_, err = store.EmailCreate(email)
 	if err != nil {
 		t.Fatalf("failed to create email: %v", err)
 	}
 
-	found, err := store.EmailFindByID(email.ID)
+	found, err := store.EmailFindByID(email.GetID())
 	if err != nil {
 		t.Fatalf("failed to find email: %v", err)
 	}
@@ -72,8 +70,8 @@ func TestEmailFindByID(t *testing.T) {
 		t.Fatal("expected to find email")
 	}
 
-	if found.EmailAddress != "findme@example.com" {
-		t.Errorf("expected EmailAddress to be 'findme@example.com', got '%s'", found.EmailAddress)
+	if found.GetEmailAddress() != "findme@example.com" {
+		t.Errorf("expected EmailAddress to be 'findme@example.com', got '%s'", found.GetEmailAddress())
 	}
 }
 
@@ -90,12 +88,11 @@ func TestEmailFindByEmailAddress(t *testing.T) {
 		t.Fatalf("failed to create person: %v", err)
 	}
 
-	email := &Email{
-		OwnerID:      person.GetID(),
-		Status:       EmailStatusActive,
-		EmailAddress: "unique@example.com",
-		IsDefault:    Yes,
-	}
+	email := NewEmail()
+	email.SetOwnerID(person.GetID())
+	email.SetStatus(EmailStatusActive)
+	email.SetEmailAddress("unique@example.com")
+	email.SetIsDefault(Yes)
 
 	_, err = store.EmailCreate(email)
 	if err != nil {
@@ -107,8 +104,8 @@ func TestEmailFindByEmailAddress(t *testing.T) {
 		t.Fatal("expected to find email by address")
 	}
 
-	if found.OwnerID != person.GetID() {
-		t.Errorf("expected OwnerID to be '%s', got '%s'", person.GetID(), found.OwnerID)
+	if found.GetOwnerID() != person.GetID() {
+		t.Errorf("expected OwnerID to be '%s', got '%s'", person.GetID(), found.GetOwnerID())
 	}
 }
 
@@ -134,31 +131,30 @@ func TestEmailUpdate(t *testing.T) {
 		t.Fatalf("failed to create person: %v", err)
 	}
 
-	email := &Email{
-		OwnerID:      person.GetID(),
-		Status:       EmailStatusActive,
-		EmailAddress: "old@example.com",
-		IsDefault:    Yes,
-	}
+	email := NewEmail()
+	email.SetOwnerID(person.GetID())
+	email.SetStatus(EmailStatusActive)
+	email.SetEmailAddress("old@example.com")
+	email.SetIsDefault(Yes)
 
 	_, err = store.EmailCreate(email)
 	if err != nil {
 		t.Fatalf("failed to create email: %v", err)
 	}
 
-	email.EmailAddress = "new@example.com"
+	email.SetEmailAddress("new@example.com")
 	result := store.EmailUpdate(email)
 	if !result {
 		t.Error("expected email update to succeed")
 	}
 
-	found, err := store.EmailFindByID(email.ID)
+	found, err := store.EmailFindByID(email.GetID())
 	if err != nil {
 		t.Fatalf("failed to find email: %v", err)
 	}
 
-	if found.EmailAddress != "new@example.com" {
-		t.Errorf("expected EmailAddress to be 'new@example.com', got '%s'", found.EmailAddress)
+	if found.GetEmailAddress() != "new@example.com" {
+		t.Errorf("expected EmailAddress to be 'new@example.com', got '%s'", found.GetEmailAddress())
 	}
 }
 
@@ -175,19 +171,18 @@ func TestEmailDeleteByID(t *testing.T) {
 		t.Fatalf("failed to create person: %v", err)
 	}
 
-	email := &Email{
-		OwnerID:      person.GetID(),
-		Status:       EmailStatusActive,
-		EmailAddress: "delete@example.com",
-		IsDefault:    Yes,
-	}
+	email := NewEmail()
+	email.SetOwnerID(person.GetID())
+	email.SetStatus(EmailStatusActive)
+	email.SetEmailAddress("delete@example.com")
+	email.SetIsDefault(Yes)
 
 	_, err = store.EmailCreate(email)
 	if err != nil {
 		t.Fatalf("failed to create email: %v", err)
 	}
 
-	deleted, err := store.EmailDeleteByID(email.ID)
+	deleted, err := store.EmailDeleteByID(email.GetID())
 	if err != nil {
 		t.Fatalf("failed to delete email: %v", err)
 	}
@@ -196,7 +191,7 @@ func TestEmailDeleteByID(t *testing.T) {
 		t.Error("expected email to be deleted")
 	}
 
-	found, err := store.EmailFindByID(email.ID)
+	found, err := store.EmailFindByID(email.GetID())
 	if err != nil {
 		t.Fatalf("failed to find email: %v", err)
 	}
@@ -219,11 +214,26 @@ func TestEmailList(t *testing.T) {
 		t.Fatalf("failed to create person: %v", err)
 	}
 
-	emails := []*Email{
-		{OwnerID: person.GetID(), Status: EmailStatusActive, EmailAddress: "email1@example.com", IsDefault: Yes},
-		{OwnerID: person.GetID(), Status: EmailStatusActive, EmailAddress: "email2@example.com", IsDefault: No},
-		{OwnerID: person.GetID(), Status: EmailStatusActive, EmailAddress: "email3@example.com", IsDefault: No},
+	emails := []EmailInterface{
+		NewEmail(),
+		NewEmail(),
+		NewEmail(),
 	}
+
+	emails[0].SetOwnerID(person.GetID())
+	emails[0].SetStatus(EmailStatusActive)
+	emails[0].SetEmailAddress("email1@example.com")
+	emails[0].SetIsDefault(Yes)
+
+	emails[1].SetOwnerID(person.GetID())
+	emails[1].SetStatus(EmailStatusActive)
+	emails[1].SetEmailAddress("email2@example.com")
+	emails[1].SetIsDefault(No)
+
+	emails[2].SetOwnerID(person.GetID())
+	emails[2].SetStatus(EmailStatusActive)
+	emails[2].SetEmailAddress("email3@example.com")
+	emails[2].SetIsDefault(No)
 
 	for _, e := range emails {
 		_, err = store.EmailCreate(e)
