@@ -85,7 +85,7 @@ func (st *storeImplementation) SqlCreateEmailTable() string {
 	return sql
 }
 
-func (st *storeImplementation) EmailFoundByPersonId(personId string) (EmailInterface, error) {
+func (st *storeImplementation) EmailFindByPersonId(personId string) (EmailInterface, error) {
 	sqlStr, _, sqlErr := goqu.Dialect(st.dbDriverName).From(st.emailTableName).Where(goqu.C("owner_id").Eq(personId), goqu.C("deleted_at").IsNull()).Limit(1).ToSQL()
 
 	if sqlErr != nil {
@@ -103,7 +103,7 @@ func (st *storeImplementation) EmailFoundByPersonId(personId string) (EmailInter
 			return nil, nil
 		}
 
-		log.Println("FunnelStore. EmailFoundByPersonId. Error: ", err)
+		log.Println("FunnelStore. EmailFindByPersonId. Error: ", err)
 		return nil, err
 	}
 	return &record, nil
