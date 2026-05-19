@@ -18,8 +18,7 @@ func (st *storeImplementation) PersonDelete(personId string) error {
 	errDelete := st.DbExec(sqlStr)
 
 	if errDelete != nil {
-		log.Println(err.Error())
-		return err
+		return errDelete
 	}
 
 	return nil
