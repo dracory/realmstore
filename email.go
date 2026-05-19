@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/doug-martin/goqu/v9"
+	"github.com/dracory/sb"
 	"github.com/georgysavva/scany/sqlscan"
 )
 
@@ -82,6 +83,14 @@ func (st *storeImplementation) SqlCreateEmailTable() string {
 		sql = sqlSqlite
 	}
 
+	return sql
+}
+
+// SqlDropEmailTable returns a SQL string for dropping the email table
+func (st *storeImplementation) SqlDropEmailTable() string {
+	sql, _ := sb.NewBuilder(st.dbDriverName).
+		Table(st.emailTableName).
+		Drop()
 	return sql
 }
 

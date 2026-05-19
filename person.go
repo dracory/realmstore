@@ -1,5 +1,7 @@
 package realmstore
 
+import "github.com/dracory/sb"
+
 const (
 	// PersonStatusActive status active
 	PersonStatusActive = "active"
@@ -65,5 +67,13 @@ func (st *storeImplementation) SqlCreatePersonTable() string {
 		sql = sqlSqlite
 	}
 
+	return sql
+}
+
+// SqlDropPersonTable returns a SQL string for dropping the person table
+func (st *storeImplementation) SqlDropPersonTable() string {
+	sql, _ := sb.NewBuilder(st.dbDriverName).
+		Table(st.personTableName).
+		Drop()
 	return sql
 }

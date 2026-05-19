@@ -1,6 +1,7 @@
 package realmstore
 
 import (
+	"context"
 	"database/sql"
 	"reflect"
 	"strings"
@@ -21,19 +22,67 @@ type storeImplementation struct {
 	debug              bool
 }
 
-func (st *storeImplementation) AutoMigrate() error {
+// MigrateUp creates the realm store tables
+func (st *storeImplementation) MigrateUp(ctx context.Context, tx ...*sql.Tx) error {
+	var txToUse *sql.Tx
+	if len(tx) > 0 {
+		txToUse = tx[0]
+	}
+
 	sqlPerson := st.SqlCreatePersonTable()
 
-	_, errorPerson := st.db.Exec(sqlPerson)
-	if errorPerson != nil {
-		return errorPerson
+	var errExec error
+	if txToUse != nil {
+		_, errExec = txToUse.ExecContext(ctx, sqlPerson)
+	} else {
+		_, errExec = st.db.ExecContext(ctx, sqlPerson)
+	}
+	if errExec != nil {
+		return errExec
 	}
 
 	sqlEmail := st.SqlCreateEmailTable()
 
-	_, errEmail := st.db.Exec(sqlEmail)
-	if errEmail != nil {
-		return errEmail
+	if txToUse != nil {
+		_, errExec = txToUse.ExecContext(ctx, sqlEmail)
+	} else {
+		_, errExec = st.db.ExecContext(ctx, sqlEmail)
+	}
+	if errExec != nil {
+		return errExec
+	}
+
+	return nil
+}
+
+// MigrateDown drops the realm store tables
+func (st *storeImplementation) MigrateDown(ctx context.Context, tx ...*sql.Tx) error {
+	var txToUse *sql.Tx
+	if len(tx) > 0 {
+		txToUse = tx[0]
+	}
+
+	sqlEmail := st.SqlDropEmailTable()
+
+	var errExec error
+	if txToUse != nil {
+		_, errExec = txToUse.ExecContext(ctx, sqlEmail)
+	} else {
+		_, errExec = st.db.ExecContext(ctx, sqlEmail)
+	}
+	if errExec != nil {
+		return errExec
+	}
+
+	sqlPerson := st.SqlDropPersonTable()
+
+	if txToUse != nil {
+		_, errExec = txToUse.ExecContext(ctx, sqlPerson)
+	} else {
+		_, errExec = st.db.ExecContext(ctx, sqlPerson)
+	}
+	if errExec != nil {
+		return errExec
 	}
 
 	return nil

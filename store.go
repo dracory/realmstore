@@ -1,6 +1,7 @@
 package realmstore
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -58,7 +59,7 @@ func NewStore(opts ...StoreOption) (StoreInterface, error) {
 	}
 
 	if store.automigrateEnabled {
-		if err := store.AutoMigrate(); err != nil {
+		if err := store.MigrateUp(context.Background()); err != nil {
 			return nil, fmt.Errorf("failed to auto-migrate: %w", err)
 		}
 	}

@@ -1,11 +1,16 @@
 package realmstore
 
 import (
+	"context"
 	"database/sql"
 )
 
 type StoreInterface interface {
-	AutoMigrate() error
+	// MigrateDown drops the realm store tables
+	MigrateDown(ctx context.Context, tx ...*sql.Tx) error
+
+	// MigrateUp creates the realm store tables
+	MigrateUp(ctx context.Context, tx ...*sql.Tx) error
 	DriverName(db *sql.DB) string
 	DbExec(sqlStr string) error
 	EnableDebug(debug bool)
