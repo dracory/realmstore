@@ -1,14 +1,15 @@
-# realmstore
+# Realm Store
 
-A Go library providing a database abstraction layer for managing Person and Email entities with full CRUD operations.
+A Go library providing a database abstraction layer for managing **Person** and **Email** entities with full CRUD operations, powered by the [neat](https://github.com/dracory/neat) ORM.
 
 ## Features
 
-- **Multi-database support**: MySQL, PostgreSQL, SQLite, MSSQL
+- **Neat ORM integration**: Uses `dracory/neat` for schema migrations, query building, and soft deletes
 - **Auto-migration**: Automatically create tables for Person and Email entities
 - **CRUD Operations**: Full Create, Read, Update, Delete functionality
-- **Query builders**: Flexible query options with filtering, pagination, and sorting
+- **Query builders**: Flexible query interfaces with filtering, pagination, sorting, and soft-delete handling
 - **Debug mode**: SQL query logging for development
+- **Soft deletes**: Records use a far-future sentinel (`MAX_DATETIME`) instead of hard deletion
 
 ## Installation
 
@@ -22,120 +23,244 @@ go get github.com/dracory/realmstore
 package main
 
 import (
+    "context"
     "database/sql"
-    _ "github.com/go-sql-driver/mysql"
+    "log"
+
+    _ "modernc.org/sqlite"
     "github.com/dracory/realmstore"
 )
 
 func main() {
-    db, _ := sql.Open("mysql", "user:password@/dbname")
-    
-    store, err := realmstore.NewStore(
-        realmstore.WithDb(db),
-        realmstore.WithPersonTableName("persons"),
-        realmstore.WithEmailTableName("emails"),
-        realmstore.WithAutoMigrate(true),
-        realmstore.WithDebug(true),
-    )
+    db, err := sql.Open("sqlite", "file:test.db?cache=shared")
     if err != nil {
-        panic(err)
+        log.Fatal(err)
     }
 
-    // Create a person with email
-    person := &realmstore.Person{
-        Status:    realmstore.PersonStatusActive,
-        FirstName: "John",
-        LastName:  "Doe",
+    store, err := realmstore.NewStore(realmstore.NewStoreOptions{
+        DB:                 db,
+        PersonTableName:    "persons",
+        EmailTableName:     "emails",
+        AutomigrateEnabled: true,
+        DebugEnabled:       false,
+    })
+    if err != nil {
+        log.Fatal(err)
     }
-    
-    err = store.PersonCreate(person)
-    // ...
+
+    // Create a person
+    person := realmstore.NewPerson()
+    person.SetStatus(realmstore.PersonStatusActive)
+    person.SetFirstName("John")
+    person.SetLastName("Doe")
+
+    err = store.PersonCreate(context.Background(), person)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Create an email for the person
+    email := realmstore.NewEmail()
+    email.SetOwnerID(person.GetID())
+    email.SetEmailAddress("john@example.com")
+    email.SetIsDefault(realmstore.Yes)
+
+    err = store.EmailCreate(context.Background(), email)
+    if err != nil {
+        log.Fatal(err)
+    }
 }
 ```
 
 ## Configuration Options
 
-| Option | Description |
-|--------|-------------|
-| `WithDb(db)` | Set the database connection |
-| `WithPersonTableName(name)` | Set the persons table name |
-| `WithEmailTableName(name)` | Set the emails table name |
-| `WithAutoMigrate(enabled)` | Enable automatic table creation |
-| `WithDebug(enabled)` | Enable SQL query logging |
+`NewStoreOptions` fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `DB` | `*sql.DB` | Database connection (required) |
+| `PersonTableName` | `string` | Persons table name (required) |
+| `EmailTableName` | `string` | Emails table name (required) |
+| `AutomigrateEnabled` | `bool` | Auto-create tables on startup |
+| `DebugEnabled` | `bool` | Enable SQL query logging |
 
 ## Person Operations
 
-- `PersonCreate(person)` - Create a new person
-- `PersonFindById(id)` - Find person by ID
-- `PersonFindByEmail(email)` - Find person by email
-- `PersonFindDefaultEmail(id)` - Get person's default email
-- `PersonUpdate(person)` - Update a person
-- `PersonUpdateById(id, updates)` - Update person by ID
-- `PersonDelete(id)` - Delete a person
-- `PersonList(opts)` - List persons with pagination
-- `PersonFindOrCreate(firstName, lastName, email)` - Find or create person
+All methods accept `context.Context` as the first argument.
+
+- `PersonCreate(ctx, person)` - Create a new person
+- `PersonCreateWithEmail(ctx, fields)` - Create a person and their email in one call
+- `PersonFindByID(ctx, id)` - Find person by ID
+- `PersonFindByEmail(ctx, email)` - Find person by email address
+- `PersonFindDefaultEmail(ctx, personID)` - Get a person's default email
+- `PersonFindOrCreate(ctx, firstName, lastName, email)` - Find or create a person
+- `PersonUpdate(ctx, person)` - Update a person
+- `PersonUpdateByID(ctx, id, fields)` - Update person fields by ID
+- `PersonDelete(ctx, id)` - Soft-delete a person
+- `PersonList(ctx, query)` - List persons with filtering/pagination
+- `PersonCount(ctx, query)` - Count matching persons
+- `PersonMaxPages(ctx, query)` - Calculate max page count
+
+### Person Query
+
+```go
+query := realmstore.PersonQuery().
+    SetStatus(realmstore.PersonStatusActive).
+    SetSearch("John").
+    SetSortBy("first_name").
+    SetSortOrder("asc").
+    SetLimit(10).
+    SetOffset(0)
+
+list, err := store.PersonList(ctx, query)
+count, err := store.PersonCount(ctx, query)
+```
+
+Query options:
+
+| Method | Description |
+|--------|-------------|
+| `SetID(id)` | Filter by ID |
+| `SetStatus(status)` | Filter by status |
+| `SetSearch(search)` | Search first/last name and email |
+| `SetWithEmail(true)` | Include email in results |
+| `SetDeletedOnly(true)` | Only soft-deleted records |
+| `SetWithSoftDeleted(true)` | Include soft-deleted records |
+| `SetLimit(n)` | Page size |
+| `SetOffset(n)` | Skip N records |
+| `SetSortBy(column)` | Sort column |
+| `SetSortOrder("asc"/"desc")` | Sort direction |
 
 ## Email Operations
 
-- `EmailCreate(email)` - Create a new email
-- `EmailFindByID(id)` - Find email by ID
-- `EmailFindByEmailAddress(address)` - Find email by address
-- `EmailFind(personId)` - Find email by person ID
-- `EmailsGetByPersonID(id)` - Get all emails for a person
-- `EmailUpdate(email)` - Update an email
-- `EmailUpdateByID(id, updates)` - Update email by ID
-- `EmailDeleteByID(id)` - Delete email by ID
-- `EmailList(opts)` - List emails with pagination
+All methods accept `context.Context` as the first argument.
+
+- `EmailCreate(ctx, email)` - Create a new email
+- `EmailFind(ctx, query)` - Find a single email by query
+- `EmailFindByID(ctx, id)` - Find email by ID
+- `EmailFindByEmailAddress(ctx, address)` - Find email by address
+- `EmailFindByPersonID(ctx, personID)` - Find email by owner ID
+- `EmailUpdate(ctx, email)` - Update an email
+- `EmailUpdateByID(ctx, id, fields)` - Update email fields by ID
+- `EmailDeleteByID(ctx, id)` - Soft-delete an email
+- `EmailList(ctx, query)` - List emails with filtering/pagination
+- `EmailCount(ctx, query)` - Count matching emails
+
+### Email Query
+
+```go
+query := realmstore.EmailQuery().
+    SetOwnerID(personID).
+    SetStatus(realmstore.EmailStatusActive).
+    SetIsDefault(realmstore.Yes).
+    SetLimit(10)
+
+list, err := store.EmailList(ctx, query)
+```
+
+Query options:
+
+| Method | Description |
+|--------|-------------|
+| `SetID(id)` | Filter by ID |
+| `SetOwnerID(id)` | Filter by person ID |
+| `SetStatus(status)` | Filter by status |
+| `SetEmailAddress(address)` | Filter by exact email address |
+| `SetIsDefault("yes"/"no")` | Filter by default flag |
+| `SetSearch(search)` | Search email address (LIKE) |
+| `SetDeletedOnly(true)` | Only soft-deleted records |
+| `SetWithSoftDeleted(true)` | Include soft-deleted records |
+| `SetLimit(n)` | Page size |
+| `SetOffset(n)` | Skip N records |
+| `SetSortBy(column)` | Sort column |
+| `SetSortOrder("asc"/"desc")` | Sort direction |
 
 ## Models
 
-### Person
+### PersonInterface
 
-| Field | Type | Description |
-|-------|------|-------------|
-| ID | string | Unique identifier |
-| Status | string | Person status (active/inactive) |
-| FirstName | string | First name |
-| MiddleNames | string | Middle names |
-| LastName | string | Last name |
-| BirthDay | *time.Time | Date of birth |
-| CreatedAt | time.Time | Creation timestamp |
-| UpdatedAt | time.Time | Last update timestamp |
-| DeletedAt | *time.Time | Deletion timestamp |
+Created via `realmstore.NewPerson()`:
 
-### Email
+```go
+person := realmstore.NewPerson()
+person.SetStatus(realmstore.PersonStatusActive)
+person.SetFirstName("John")
+person.SetLastName("Doe")
+person.SetMiddleNames("Robert")
+person.SetBirthDay(&birthDate)
+```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| ID | string | Unique identifier |
-| OwnerID | string | ID of the person who owns this email |
-| Status | string | Email status (active/inactive/pending_activation) |
-| EmailAddress | string | Email address |
-| IsDefault | string | Whether this is the default email (yes/no) |
-| CreatedAt | time.Time | Creation timestamp |
-| UpdatedAt | time.Time | Last update timestamp |
-| DeletedAt | *time.Time | Deletion timestamp |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `GetID()` / `SetID(id)` | `string` | Unique identifier |
+| `GetStatus()` / `SetStatus(status)` | `string` | Person status |
+| `GetFirstName()` / `SetFirstName(name)` | `string` | First name |
+| `GetMiddleNames()` / `SetMiddleNames(names)` | `string` | Middle names |
+| `GetLastName()` / `SetLastName(name)` | `string` | Last name |
+| `GetBirthDay()` / `SetBirthDay(t)` | `*time.Time` | Date of birth |
+| `GetCreatedAt()` / `SetCreatedAt(s)` | `string` | Creation timestamp (carbon) |
+| `GetCreatedAtCarbon()` | `*carbon.Carbon` | Creation as Carbon |
+| `GetUpdatedAt()` / `SetUpdatedAt(s)` | `string` | Update timestamp (carbon) |
+| `GetUpdatedAtCarbon()` | `*carbon.Carbon` | Updated as Carbon |
+| `GetSoftDeletedAt()` / `SetSoftDeletedAt(s)` | `string` | Soft-delete timestamp |
+| `GetSoftDeletedAtCarbon()` | `*carbon.Carbon` | Soft-delete as Carbon |
+| `IsSoftDeleted()` | `bool` | Whether record is soft-deleted |
+
+### EmailInterface
+
+Created via `realmstore.NewEmail()`:
+
+```go
+email := realmstore.NewEmail()
+email.SetOwnerID(person.GetID())
+email.SetEmailAddress("john@example.com")
+email.SetIsDefault(realmstore.Yes)
+```
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `GetID()` / `SetID(id)` | `string` | Unique identifier |
+| `GetOwnerID()` / `SetOwnerID(id)` | `string` | Person ID who owns this email |
+| `GetStatus()` / `SetStatus(status)` | `string` | Email status |
+| `GetEmailAddress()` / `SetEmailAddress(addr)` | `string` | Email address |
+| `GetIsDefault()` / `SetIsDefault(v)` | `string` | `Yes` or `No` |
+| `GetCreatedAt()` / `SetCreatedAt(s)` | `string` | Creation timestamp |
+| `GetCreatedAtCarbon()` | `*carbon.Carbon` | Creation as Carbon |
+| `GetUpdatedAt()` / `SetUpdatedAt(s)` | `string` | Update timestamp |
+| `GetUpdatedAtCarbon()` | `*carbon.Carbon` | Updated as Carbon |
+| `GetSoftDeletedAt()` / `SetSoftDeletedAt(s)` | `string` | Soft-delete timestamp |
+| `GetSoftDeletedAtCarbon()` | `*carbon.Carbon` | Soft-delete as Carbon |
+| `IsSoftDeleted()` | `bool` | Whether record is soft-deleted |
 
 ## Constants
 
 ### Person Status
-- `PersonStatusActive` - "active"
-- `PersonStatusInactive` - "inactive"
+- `PersonStatusActive` - `"active"`
+- `PersonStatusInactive` - `"inactive"`
 
 ### Email Status
-- `EmailStatusActive` - "active"
-- `EmailStatusInactive` - "inactive"
-- `EmailStatusPendingActivation` - "pending_activation"
+- `EmailStatusActive` - `"active"`
+- `EmailStatusInactive` - `"inactive"`
+- `EmailStatusPendingActivation` - `"pending_activation"`
 
-### Email Type
-- `EmailTypePersonal` - "personal"
-- `EmailTypeWork` - "work"
+### Boolean Flags
+- `Yes` - `"yes"`
+- `No` - `"no"`
+
+## Soft Deletes
+
+Both Person and Email use soft deletes. Records are not physically removed from the database. Instead:
+
+- `PersonDelete` / `EmailDeleteByID` set `soft_deleted_at` to the current time
+- By default, `List` and `Find` queries exclude soft-deleted records
+- Use `SetWithSoftDeleted(true)` on queries to include them
+- Use `SetDeletedOnly(true)` to return only soft-deleted records
+- New records are initialized with `soft_deleted_at = MAX_DATETIME` (far future)
 
 ## Dependencies
 
-- [goqu](https://github.com/doug-martin/goqu) - SQL query builder
-- [scany](https://github.com/georgysavva/scany) - Database scan utility
-- [dracory/uid](https://github.com/dracory/uid) - Unique ID generator
+- [neat](https://github.com/dracory/neat) - Database ORM and schema builder
+- [carbon](https://github.com/dromara/carbon) - DateTime library for Go
 
 ## License
 
