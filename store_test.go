@@ -13,12 +13,12 @@ func newTestStore(t *testing.T) StoreInterface {
 		t.Fatalf("failed to open database: %v", err)
 	}
 
-	store, err := NewStore(
-		WithDb(db),
-		WithPersonTableName("persons"),
-		WithEmailTableName("emails"),
-		WithAutoMigrate(true),
-	)
+	store, err := NewStore(NewStoreOptions{
+		DB:                 db,
+		PersonTableName:    "persons",
+		EmailTableName:     "emails",
+		AutomigrateEnabled: true,
+	})
 	if err != nil {
 		t.Fatalf("failed to create store: %v", err)
 	}

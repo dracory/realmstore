@@ -1,119 +1,199 @@
 package realmstore
 
 import (
-	"context"
-	"database/sql"
-	"log"
+	"time"
 
-	"github.com/doug-martin/goqu/v9"
-	"github.com/dracory/sb"
-	"github.com/georgysavva/scany/sqlscan"
+	"github.com/dracory/neat/database/orm"
+	"github.com/dracory/neat/database/soft_delete"
+	neatuid "github.com/dracory/neat/support/uid"
+	"github.com/dromara/carbon/v2"
 )
 
-const (
-	// EmailStatusActive actove status
-	EmailStatusActive = "active"
-	// EmailStatusInactive inactive status
-	EmailStatusInactive = "inactive"
-	// EmailStatusPendingActivation pending_activation status
-	EmailStatusPendingActivation = "pending_activation"
+// EmailInterface defines the public API for an email
+type EmailInterface interface {
+	GetID() string
+	SetID(id string) EmailInterface
 
-	// EmailTypePersonal represents a personal type
-	EmailTypePersonal = "personal"
-	// EmailTypeWork represents a work type
-	EmailTypeWork = "work"
+	GetOwnerID() string
+	SetOwnerID(ownerID string) EmailInterface
 
-	// No represents a boolean no
-	No = "no"
+	GetStatus() string
+	SetStatus(status string) EmailInterface
 
-	// Yes represents a boolean yes
-	Yes = "yes"
-)
+	GetEmailAddress() string
+	SetEmailAddress(emailAddress string) EmailInterface
 
-// SqlCreateEmailTable returns a SQL string for creating the user table
-func (st *storeImplementation) SqlCreateEmailTable() string {
-	sqlMysql := `
-	CREATE TABLE IF NOT EXISTS ` + st.emailTableName + ` (
-	  id varchar(40) NOT NULL PRIMARY KEY,
-	  status varchar(40) NOT NULL,
-	  owner_id varchar(40) NOT NULL, 
-	  email_address varchar(100) NOT NULL,
-	  is_default varchar(3) NOT NULL,
-	  created_at datetime NOT NULL,
-	  updated_at datetime NOT NULL,
-	  deleted_at datetime DEFAULT NULL
-	);
-	`
+	GetIsDefault() string
+	SetIsDefault(isDefault string) EmailInterface
 
-	sqlPostgres := `
-	CREATE TABLE IF NOT EXISTS "` + st.emailTableName + `" (
-	  "id" varchar(40) NOT NULL PRIMARY KEY,
-	  "status" varchar(40) NOT NULL,
-	  "owner_id" varchar(40) NOT NULL,
-	  "email_address" varchar(100) NOT NULL,
-	  "is_default" varchar(3) NOT NULL,
-	  "created_at" datetime NOT NULL,
-	  "updated_at" datetime NOT NULL,
-	  "deleted_at" datetime DEFAULT NULL
-	)
-	`
+	GetCreatedAt() string
+	GetCreatedAtCarbon() *carbon.Carbon
+	SetCreatedAt(createdAt string) EmailInterface
 
-	sqlSqlite := `
-	CREATE TABLE IF NOT EXISTS "` + st.emailTableName + `" (
-	  "id" varchar(40) NOT NULL PRIMARY KEY,
-	  "status" varchar(40) NOT NULL,
-	  "owner_id" varchar(40) NOT NULL,
-	  "email_address" varchar(100) NOT NULL,
-	  "is_default" varchar(3) NOT NULL,
-	  "created_at" datetime NOT NULL,
-	  "updated_at" datetime NOT NULL,
-	  "deleted_at" datetime DEFAULT NULL
-	)
-	`
+	GetUpdatedAt() string
+	GetUpdatedAtCarbon() *carbon.Carbon
+	SetUpdatedAt(updatedAt string) EmailInterface
 
-	sql := "unsupported driver " + st.dbDriverName
+	GetSoftDeletedAt() string
+	GetSoftDeletedAtCarbon() *carbon.Carbon
+	SetSoftDeletedAt(deletedAt string) EmailInterface
 
-	if st.dbDriverName == "mysql" {
-		sql = sqlMysql
-	}
-	if st.dbDriverName == "postgres" {
-		sql = sqlPostgres
-	}
-	if st.dbDriverName == "sqlite" {
-		sql = sqlSqlite
-	}
-
-	return sql
+	IsSoftDeleted() bool
 }
 
-// SqlDropEmailTable returns a SQL string for dropping the email table
-func (st *storeImplementation) SqlDropEmailTable() string {
-	sql, _ := sb.NewBuilder(st.dbDriverName).
-		Table(st.emailTableName).
-		Drop()
-	return sql
+// emailImplementation is the concrete implementation of EmailInterface
+type emailImplementation struct {
+	orm.ShortID
+
+	OwnerIDField      string `db:"owner_id"`
+	StatusField       string `db:"status"`
+	EmailAddressField string `db:"email_address"`
+	IsDefaultField    string `db:"is_default"`
+	CreatedAtField    orm.CreatedAt
+	UpdatedAtField    orm.UpdatedAt
+	soft_delete.SoftDeletesMaxDate
 }
 
-func (st *storeImplementation) EmailFindByPersonId(personId string) (EmailInterface, error) {
-	sqlStr, _, sqlErr := goqu.Dialect(st.dbDriverName).From(st.emailTableName).Where(goqu.C("owner_id").Eq(personId), goqu.C("deleted_at").IsNull()).Limit(1).ToSQL()
+var _ EmailInterface = (*emailImplementation)(nil)
 
-	if sqlErr != nil {
-		return nil, sqlErr
+// NewEmail creates a new email.
+func NewEmail() EmailInterface {
+	o := &emailImplementation{}
+	o.SetID(neatuid.GenerateShortID())
+	o.SetStatus(EmailStatusActive)
+	o.SetEmailAddress("")
+	o.SetIsDefault(No)
+	o.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
+	o.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
+	o.SetSoftDeletedAt(MAX_DATETIME)
+	return o
+}
+
+// NewEmailFromExistingData creates a new email from a raw column map.
+func NewEmailFromExistingData(data map[string]string) EmailInterface {
+	o := &emailImplementation{}
+	o.SetID(data[COLUMN_ID])
+	o.SetOwnerID(data[COLUMN_OWNER_ID])
+	o.SetStatus(data[COLUMN_STATUS])
+	o.SetEmailAddress(data[COLUMN_EMAIL_ADDRESS])
+	o.SetIsDefault(data[COLUMN_IS_DEFAULT])
+	if v, ok := data[COLUMN_CREATED_AT]; ok {
+		o.SetCreatedAt(v)
 	}
-
-	var record emailImplementation
-	err := sqlscan.Get(context.Background(), st.db, &record, sqlStr)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-
-		if sqlscan.NotFound(err) {
-			return nil, nil
-		}
-
-		log.Println("FunnelStore. EmailFindByPersonId. Error: ", err)
-		return nil, err
+	if v, ok := data[COLUMN_UPDATED_AT]; ok {
+		o.SetUpdatedAt(v)
 	}
-	return &record, nil
+	if v, ok := data[COLUMN_SOFT_DELETED_AT]; ok {
+		o.SetSoftDeletedAt(v)
+	}
+	return o
+}
+
+// == SETTERS AND GETTERS =====================================================
+
+func (e *emailImplementation) GetID() string {
+	return e.ShortID.ID
+}
+
+func (e *emailImplementation) SetID(id string) EmailInterface {
+	e.ShortID.ID = id
+	return e
+}
+
+func (e *emailImplementation) GetOwnerID() string {
+	return e.OwnerIDField
+}
+
+func (e *emailImplementation) SetOwnerID(ownerID string) EmailInterface {
+	e.OwnerIDField = ownerID
+	return e
+}
+
+func (e *emailImplementation) GetStatus() string {
+	return e.StatusField
+}
+
+func (e *emailImplementation) SetStatus(status string) EmailInterface {
+	e.StatusField = status
+	return e
+}
+
+func (e *emailImplementation) GetEmailAddress() string {
+	return e.EmailAddressField
+}
+
+func (e *emailImplementation) SetEmailAddress(emailAddress string) EmailInterface {
+	e.EmailAddressField = emailAddress
+	return e
+}
+
+func (e *emailImplementation) GetIsDefault() string {
+	return e.IsDefaultField
+}
+
+func (e *emailImplementation) SetIsDefault(isDefault string) EmailInterface {
+	e.IsDefaultField = isDefault
+	return e
+}
+
+func (e *emailImplementation) GetCreatedAt() string {
+	if e.CreatedAtField.CreatedAt.IsZero() {
+		return ""
+	}
+	return carbon.CreateFromStdTime(e.CreatedAtField.CreatedAt).ToDateTimeString()
+}
+
+func (e *emailImplementation) GetCreatedAtCarbon() *carbon.Carbon {
+	return carbon.CreateFromStdTime(e.CreatedAtField.CreatedAt)
+}
+
+func (e *emailImplementation) SetCreatedAt(createdAt string) EmailInterface {
+	if createdAt == "" {
+		return e
+	}
+	e.CreatedAtField.CreatedAt = carbon.Parse(createdAt, carbon.UTC).StdTime()
+	return e
+}
+
+func (e *emailImplementation) GetUpdatedAt() string {
+	if e.UpdatedAtField.UpdatedAt.IsZero() {
+		return ""
+	}
+	return carbon.CreateFromStdTime(e.UpdatedAtField.UpdatedAt).ToDateTimeString()
+}
+
+func (e *emailImplementation) GetUpdatedAtCarbon() *carbon.Carbon {
+	return carbon.CreateFromStdTime(e.UpdatedAtField.UpdatedAt)
+}
+
+func (e *emailImplementation) SetUpdatedAt(updatedAt string) EmailInterface {
+	if updatedAt == "" {
+		return e
+	}
+	e.UpdatedAtField.UpdatedAt = carbon.Parse(updatedAt, carbon.UTC).StdTime()
+	return e
+}
+
+func (e *emailImplementation) GetSoftDeletedAt() string {
+	if e.SoftDeletedAt.IsZero() {
+		return ""
+	}
+	return carbon.CreateFromStdTime(e.SoftDeletedAt).ToDateTimeString()
+}
+
+func (e *emailImplementation) GetSoftDeletedAtCarbon() *carbon.Carbon {
+	return carbon.CreateFromStdTime(e.SoftDeletedAt)
+}
+
+func (e *emailImplementation) SetSoftDeletedAt(deletedAt string) EmailInterface {
+	if deletedAt == "" {
+		e.SoftDeletedAt = time.Time{}
+		return e
+	}
+	e.SoftDeletedAt = carbon.Parse(deletedAt, carbon.UTC).StdTime()
+	return e
+}
+
+func (e *emailImplementation) IsSoftDeleted() bool {
+	return e.SoftDeletedAt.Before(carbon.Now(carbon.UTC).StdTime())
 }

@@ -1,6 +1,7 @@
 package realmstore
 
 import (
+	"context"
 	"testing"
 )
 
@@ -12,7 +13,7 @@ func TestEmailCreate(t *testing.T) {
 	person.SetFirstName("Email")
 	person.SetLastName("Owner")
 
-	err := store.PersonCreate(person)
+	err := store.PersonCreate(context.Background(), person)
 	if err != nil {
 		t.Fatalf("failed to create person: %v", err)
 	}
@@ -23,13 +24,9 @@ func TestEmailCreate(t *testing.T) {
 	email.SetEmailAddress("test@example.com")
 	email.SetIsDefault(Yes)
 
-	created, err := store.EmailCreate(email)
+	err = store.EmailCreate(context.Background(), email)
 	if err != nil {
 		t.Fatalf("failed to create email: %v", err)
-	}
-
-	if !created {
-		t.Error("expected email to be created")
 	}
 
 	if email.GetID() == "" {
@@ -45,7 +42,7 @@ func TestEmailFindByID(t *testing.T) {
 	person.SetFirstName("Email")
 	person.SetLastName("Finder")
 
-	err := store.PersonCreate(person)
+	err := store.PersonCreate(context.Background(), person)
 	if err != nil {
 		t.Fatalf("failed to create person: %v", err)
 	}
@@ -56,12 +53,12 @@ func TestEmailFindByID(t *testing.T) {
 	email.SetEmailAddress("findme@example.com")
 	email.SetIsDefault(Yes)
 
-	_, err = store.EmailCreate(email)
+	err = store.EmailCreate(context.Background(), email)
 	if err != nil {
 		t.Fatalf("failed to create email: %v", err)
 	}
 
-	found, err := store.EmailFindByID(email.GetID())
+	found, err := store.EmailFindByID(context.Background(), email.GetID())
 	if err != nil {
 		t.Fatalf("failed to find email: %v", err)
 	}
@@ -83,7 +80,7 @@ func TestEmailFindByEmailAddress(t *testing.T) {
 	person.SetFirstName("Email")
 	person.SetLastName("Address")
 
-	err := store.PersonCreate(person)
+	err := store.PersonCreate(context.Background(), person)
 	if err != nil {
 		t.Fatalf("failed to create person: %v", err)
 	}
@@ -94,12 +91,15 @@ func TestEmailFindByEmailAddress(t *testing.T) {
 	email.SetEmailAddress("unique@example.com")
 	email.SetIsDefault(Yes)
 
-	_, err = store.EmailCreate(email)
+	err = store.EmailCreate(context.Background(), email)
 	if err != nil {
 		t.Fatalf("failed to create email: %v", err)
 	}
 
-	found := store.EmailFindByEmailAddress("unique@example.com")
+	found, err := store.EmailFindByEmailAddress(context.Background(), "unique@example.com")
+	if err != nil {
+		t.Fatalf("failed to find email by address: %v", err)
+	}
 	if found == nil {
 		t.Fatal("expected to find email by address")
 	}
@@ -112,7 +112,10 @@ func TestEmailFindByEmailAddress(t *testing.T) {
 func TestEmailFindByEmailAddressNotFound(t *testing.T) {
 	store := newTestStore(t)
 
-	found := store.EmailFindByEmailAddress("nonexistent@example.com")
+	found, err := store.EmailFindByEmailAddress(context.Background(), "nonexistent@example.com")
+	if err != nil {
+		t.Fatalf("failed to find email by address: %v", err)
+	}
 	if found != nil {
 		t.Error("expected nil for nonexistent email address")
 	}
@@ -126,7 +129,7 @@ func TestEmailUpdate(t *testing.T) {
 	person.SetFirstName("Email")
 	person.SetLastName("Updater")
 
-	err := store.PersonCreate(person)
+	err := store.PersonCreate(context.Background(), person)
 	if err != nil {
 		t.Fatalf("failed to create person: %v", err)
 	}
@@ -137,18 +140,18 @@ func TestEmailUpdate(t *testing.T) {
 	email.SetEmailAddress("old@example.com")
 	email.SetIsDefault(Yes)
 
-	_, err = store.EmailCreate(email)
+	err = store.EmailCreate(context.Background(), email)
 	if err != nil {
 		t.Fatalf("failed to create email: %v", err)
 	}
 
 	email.SetEmailAddress("new@example.com")
-	result := store.EmailUpdate(email)
-	if !result {
-		t.Error("expected email update to succeed")
+	err = store.EmailUpdate(context.Background(), email)
+	if err != nil {
+		t.Fatalf("failed to update email: %v", err)
 	}
 
-	found, err := store.EmailFindByID(email.GetID())
+	found, err := store.EmailFindByID(context.Background(), email.GetID())
 	if err != nil {
 		t.Fatalf("failed to find email: %v", err)
 	}
@@ -166,7 +169,7 @@ func TestEmailDeleteByID(t *testing.T) {
 	person.SetFirstName("Email")
 	person.SetLastName("Deleter")
 
-	err := store.PersonCreate(person)
+	err := store.PersonCreate(context.Background(), person)
 	if err != nil {
 		t.Fatalf("failed to create person: %v", err)
 	}
@@ -177,21 +180,17 @@ func TestEmailDeleteByID(t *testing.T) {
 	email.SetEmailAddress("delete@example.com")
 	email.SetIsDefault(Yes)
 
-	_, err = store.EmailCreate(email)
+	err = store.EmailCreate(context.Background(), email)
 	if err != nil {
 		t.Fatalf("failed to create email: %v", err)
 	}
 
-	deleted, err := store.EmailDeleteByID(email.GetID())
+	err = store.EmailDeleteByID(context.Background(), email.GetID())
 	if err != nil {
 		t.Fatalf("failed to delete email: %v", err)
 	}
 
-	if !deleted {
-		t.Error("expected email to be deleted")
-	}
-
-	found, err := store.EmailFindByID(email.GetID())
+	found, err := store.EmailFindByID(context.Background(), email.GetID())
 	if err != nil {
 		t.Fatalf("failed to find email: %v", err)
 	}
@@ -209,7 +208,7 @@ func TestEmailList(t *testing.T) {
 	person.SetFirstName("Email")
 	person.SetLastName("Lister")
 
-	err := store.PersonCreate(person)
+	err := store.PersonCreate(context.Background(), person)
 	if err != nil {
 		t.Fatalf("failed to create person: %v", err)
 	}
@@ -236,15 +235,13 @@ func TestEmailList(t *testing.T) {
 	emails[2].SetIsDefault(No)
 
 	for _, e := range emails {
-		_, err = store.EmailCreate(e)
+		err = store.EmailCreate(context.Background(), e)
 		if err != nil {
 			t.Fatalf("failed to create email: %v", err)
 		}
 	}
 
-	list, err := store.EmailList(&EmailQueryOptions{
-		OwnerID: person.GetID(),
-	})
+	list, err := store.EmailList(context.Background(), EmailQuery().SetOwnerID(person.GetID()))
 	if err != nil {
 		t.Fatalf("failed to list emails: %v", err)
 	}
