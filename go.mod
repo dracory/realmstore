@@ -3,11 +3,8 @@ module github.com/dracory/realmstore
 go 1.26.3
 
 require (
-	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/dracory/neat v0.19.0
-	github.com/dracory/uid v1.9.0
 	github.com/dromara/carbon/v2 v2.6.16
-	github.com/georgysavva/scany v1.2.3
 	modernc.org/sqlite v1.52.0
 )
 
@@ -20,7 +17,6 @@ require (
 	github.com/rogpeppe/go-internal v1.15.0 // indirect
 	github.com/samber/lo v1.53.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
-	github.com/stretchr/objx v0.5.3 // indirect
 	golang.org/x/exp v0.0.0-20260611194520-c48552f49976 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
