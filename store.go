@@ -11,7 +11,6 @@ import (
 	"github.com/dracory/neat"
 	contractsorm "github.com/dracory/neat/contracts/database/orm"
 	contractsschema "github.com/dracory/neat/contracts/database/schema"
-	"github.com/dromara/carbon/v2"
 )
 
 // == INTERFACE ===============================================================
@@ -248,7 +247,8 @@ func (st *storeImplementation) EnableDebug(debug bool) {
 // == QUERY BUILDERS ===========================================================
 
 func (st *storeImplementation) buildPersonQuery(query PersonQueryInterface) contractsorm.Query {
-	q := st.db.Query().Table(st.personTableName)
+	// Use Model() to enable neat's automatic soft delete handling via SoftDeletesMaxDate
+	q := st.db.Query().Model(&personImplementation{}).Table(st.personTableName)
 
 	if query == nil {
 		return q
@@ -267,10 +267,11 @@ func (st *storeImplementation) buildPersonQuery(query PersonQueryInterface) cont
 		q = q.Where("("+COLUMN_FIRST_NAME+" LIKE ? OR "+COLUMN_LAST_NAME+" LIKE ? OR "+COLUMN_EMAIL_ADDRESS+" LIKE ?)", search, search, search)
 	}
 
+	// Handle soft delete filtering via neat's automatic handling (SoftDeletesMaxDate)
 	if query.IsDeletedOnlySet() && query.GetDeletedOnly() {
-		q = q.Where(COLUMN_SOFT_DELETED_AT+" < ?", carbon.Parse(MAX_DATETIME, carbon.UTC).StdTime())
-	} else if !query.IsWithSoftDeletedSet() || !query.GetWithSoftDeleted() {
-		q = q.Where(COLUMN_SOFT_DELETED_AT+" = ?", carbon.Parse(MAX_DATETIME, carbon.UTC).StdTime())
+		q = q.OnlySoftDeleted()
+	} else if query.IsWithSoftDeletedSet() && query.GetWithSoftDeleted() {
+		q = q.WithSoftDeleted()
 	}
 
 	if query.IsLimitSet() && query.GetLimit() > 0 {
@@ -293,7 +294,8 @@ func (st *storeImplementation) buildPersonQuery(query PersonQueryInterface) cont
 }
 
 func (st *storeImplementation) buildEmailQuery(query EmailQueryInterface) contractsorm.Query {
-	q := st.db.Query().Table(st.emailTableName)
+	// Use Model() to enable neat's automatic soft delete handling via SoftDeletesMaxDate
+	q := st.db.Query().Model(&emailImplementation{}).Table(st.emailTableName)
 
 	if query == nil {
 		return q
@@ -324,10 +326,11 @@ func (st *storeImplementation) buildEmailQuery(query EmailQueryInterface) contra
 		q = q.Where(COLUMN_EMAIL_ADDRESS+" LIKE ?", search)
 	}
 
+	// Handle soft delete filtering via neat's automatic handling (SoftDeletesMaxDate)
 	if query.IsDeletedOnlySet() && query.GetDeletedOnly() {
-		q = q.Where(COLUMN_SOFT_DELETED_AT+" < ?", carbon.Parse(MAX_DATETIME, carbon.UTC).StdTime())
-	} else if !query.IsWithSoftDeletedSet() || !query.GetWithSoftDeleted() {
-		q = q.Where(COLUMN_SOFT_DELETED_AT+" = ?", carbon.Parse(MAX_DATETIME, carbon.UTC).StdTime())
+		q = q.OnlySoftDeleted()
+	} else if query.IsWithSoftDeletedSet() && query.GetWithSoftDeleted() {
+		q = q.WithSoftDeleted()
 	}
 
 	if query.IsLimitSet() && query.GetLimit() > 0 {
