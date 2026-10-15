@@ -705,3 +705,25 @@ func TestEmailFromExistingData(t *testing.T) {
 		t.Errorf("expected is_default '%s', got '%s'", Yes, email.GetIsDefault())
 	}
 }
+
+func TestEmailQueryValidation(t *testing.T) {
+	q := NewEmailQuery()
+	if err := q.Validate(); err != nil {
+		t.Fatalf("expected valid query, got %v", err)
+	}
+
+	q.SetID("")
+	if err := q.Validate(); err == nil {
+		t.Error("expected error for empty ID in EmailQuery")
+	}
+
+	q = NewEmailQuery().SetLimit(-1)
+	if err := q.Validate(); err == nil {
+		t.Error("expected error for negative limit in EmailQuery")
+	}
+
+	q = NewEmailQuery().SetOffset(-1)
+	if err := q.Validate(); err == nil {
+		t.Error("expected error for negative offset in EmailQuery")
+	}
+}

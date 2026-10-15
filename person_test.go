@@ -682,3 +682,30 @@ func TestPersonWithEmailInterface(t *testing.T) {
 		t.Errorf("expected ID 'p1', got '%s'", iface.GetID())
 	}
 }
+
+func TestPersonQueryValidation(t *testing.T) {
+	q := NewPersonQuery()
+	if err := q.Validate(); err != nil {
+		t.Fatalf("expected valid query, got %v", err)
+	}
+
+	q.SetID("")
+	if err := q.Validate(); err == nil {
+		t.Error("expected error for empty ID in PersonQuery")
+	}
+
+	q = NewPersonQuery().SetLimit(-1)
+	if err := q.Validate(); err == nil {
+		t.Error("expected error for negative limit in PersonQuery")
+	}
+
+	q = NewPersonQuery().SetOffset(-1)
+	if err := q.Validate(); err == nil {
+		t.Error("expected error for negative offset in PersonQuery")
+	}
+
+	q = NewPersonQuery().SetWithEmail(true)
+	if !q.IsWithEmailSet() || !q.GetWithEmail() {
+		t.Error("expected WithEmail to be set")
+	}
+}
