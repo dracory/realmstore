@@ -2,10 +2,10 @@ package realmstore
 
 import (
 	"time"
+	"uuid"
 
 	"github.com/dracory/neat/database/orm"
 	"github.com/dracory/neat/database/soft_delete"
-	neatuid "github.com/dracory/neat/support/uid"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -43,7 +43,7 @@ type EmailInterface interface {
 
 // emailImplementation is the concrete implementation of EmailInterface
 type emailImplementation struct {
-	orm.ShortID
+	orm.StringID
 
 	OwnerIDField      string `db:"owner_id"`
 	StatusField       string `db:"status"`
@@ -59,7 +59,7 @@ var _ EmailInterface = (*emailImplementation)(nil)
 // NewEmail creates a new email.
 func NewEmail() EmailInterface {
 	o := &emailImplementation{}
-	o.SetID(neatuid.GenerateShortID())
+	o.SetID(uuid.NewV7().String())
 	o.SetStatus(EmailStatusActive)
 	o.SetEmailAddress("")
 	o.SetIsDefault(No)
@@ -92,11 +92,11 @@ func NewEmailFromExistingData(data map[string]string) EmailInterface {
 // == SETTERS AND GETTERS =====================================================
 
 func (e *emailImplementation) GetID() string {
-	return e.ShortID.ID
+	return e.StringID.ID
 }
 
 func (e *emailImplementation) SetID(id string) EmailInterface {
-	e.ShortID.ID = id
+	e.StringID.ID = id
 	return e
 }
 

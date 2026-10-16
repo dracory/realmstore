@@ -2,10 +2,10 @@ package realmstore
 
 import (
 	"time"
+	"uuid"
 
 	"github.com/dracory/neat/database/orm"
 	"github.com/dracory/neat/database/soft_delete"
-	neatuid "github.com/dracory/neat/support/uid"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -46,7 +46,7 @@ type PersonInterface interface {
 
 // personImplementation is the concrete implementation of PersonInterface
 type personImplementation struct {
-	orm.ShortID
+	orm.StringID
 
 	StatusField      string     `db:"status"`
 	FirstNameField   string     `db:"first_name"`
@@ -63,7 +63,7 @@ var _ PersonInterface = (*personImplementation)(nil)
 // NewPerson creates a new person.
 func NewPerson() PersonInterface {
 	o := &personImplementation{}
-	o.SetID(neatuid.GenerateShortID())
+	o.SetID(uuid.NewV7().String())
 	o.SetStatus(PersonStatusActive)
 	o.SetFirstName("")
 	o.SetMiddleNames("")
@@ -98,11 +98,11 @@ func NewPersonFromExistingData(data map[string]string) PersonInterface {
 // == SETTERS AND GETTERS =====================================================
 
 func (p *personImplementation) GetID() string {
-	return p.ShortID.ID
+	return p.StringID.ID
 }
 
 func (p *personImplementation) SetID(id string) PersonInterface {
-	p.ShortID.ID = id
+	p.StringID.ID = id
 	return p
 }
 

@@ -3,8 +3,8 @@ package realmstore
 import (
 	"context"
 	"errors"
+	"uuid"
 
-	neatuid "github.com/dracory/neat/support/uid"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -17,20 +17,20 @@ func (st *storeImplementation) EmailCreate(ctx context.Context, email EmailInter
 	}
 
 	if email.GetID() == "" {
-		email.SetID(neatuid.GenerateShortID())
+		email.SetID(uuid.NewV7().String())
 	}
 
 	email.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
 	email.SetUpdatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
 
 	row := map[string]any{
-		COLUMN_ID:            email.GetID(),
-		COLUMN_OWNER_ID:      email.GetOwnerID(),
-		COLUMN_STATUS:        email.GetStatus(),
-		COLUMN_EMAIL_ADDRESS: email.GetEmailAddress(),
-		COLUMN_IS_DEFAULT:    email.GetIsDefault(),
-		COLUMN_CREATED_AT:    email.GetCreatedAtCarbon().StdTime(),
-		COLUMN_UPDATED_AT:    email.GetUpdatedAtCarbon().StdTime(),
+		COLUMN_ID:              email.GetID(),
+		COLUMN_OWNER_ID:        email.GetOwnerID(),
+		COLUMN_STATUS:          email.GetStatus(),
+		COLUMN_EMAIL_ADDRESS:   email.GetEmailAddress(),
+		COLUMN_IS_DEFAULT:      email.GetIsDefault(),
+		COLUMN_CREATED_AT:      email.GetCreatedAtCarbon().StdTime(),
+		COLUMN_UPDATED_AT:      email.GetUpdatedAtCarbon().StdTime(),
 		COLUMN_SOFT_DELETED_AT: carbon.Parse(MAX_DATETIME, carbon.UTC).StdTime(),
 	}
 
@@ -45,7 +45,7 @@ func (st *storeImplementation) EmailDeleteByID(ctx context.Context, emailID stri
 
 	row := map[string]any{
 		COLUMN_SOFT_DELETED_AT: carbon.Now(carbon.UTC).StdTime(),
-		COLUMN_UPDATED_AT:        carbon.Now(carbon.UTC).StdTime(),
+		COLUMN_UPDATED_AT:      carbon.Now(carbon.UTC).StdTime(),
 	}
 
 	_, err := st.db.Query().

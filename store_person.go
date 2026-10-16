@@ -3,8 +3,8 @@ package realmstore
 import (
 	"context"
 	"errors"
+	"uuid"
 
-	neatuid "github.com/dracory/neat/support/uid"
 	"github.com/dromara/carbon/v2"
 )
 
@@ -17,7 +17,7 @@ func (st *storeImplementation) PersonCreate(ctx context.Context, person PersonIn
 	}
 
 	if person.GetID() == "" {
-		person.SetID(neatuid.GenerateShortID())
+		person.SetID(uuid.NewV7().String())
 	}
 
 	person.SetCreatedAt(carbon.Now(carbon.UTC).ToDateTimeString())
